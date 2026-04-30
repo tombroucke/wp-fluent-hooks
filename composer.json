@@ -1,0 +1,24 @@
+{
+  "name": "tombroucke/wp-fluent-hooks",
+  "description": "A small utility package that provides a modern, fluent interface for adding WordPress action and filter hooks. Chain methods to build your hooks in a more expressive and readable way.",
+  "type": "library",
+  "require": {
+    "php": ">=8.0"
+  },
+  "require-dev": {
+    "laravel/pint": "^1.29",
+    "phpstan/phpstan": "^2.1",
+    "szepeviktor/phpstan-wordpress": "^2.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Otomaties\\WpFluentHooks\\": "src/"
+    }
+  },
+  "authors": [
+    {
+      "name": "Tom Broucke",
+      "email": "tom@tombroucke.be"
+    }
+  ]
+}
