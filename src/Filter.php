@@ -10,8 +10,6 @@ class Filter
 
     protected ?string $alias = null;
 
-    protected ?string $key = null;
-
     protected function __construct(protected string $hookName)
     {
         //
@@ -45,7 +43,7 @@ class Filter
 
     public function register(callable|string|array $callback): static
     {
-        $this->key = FilterRepository::getInstance()->add($this->hookName, $callback, $this->priority, $this->args, $this->alias);
+        $this->alias = FilterRepository::getInstance()->add($this->hookName, $callback, $this->priority, $this->args, $this->alias);
 
         return $this;
     }

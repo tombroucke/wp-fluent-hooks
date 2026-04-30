@@ -48,3 +48,14 @@ Remove a registered hook by its alias:
 ```php
 Action::deregister('my_custom_body_class');
 ```
+
+If you didn't define an alias, retrieve the auto-generated one from the registered instance:
+
+```php
+$filter = Filter::hook('the_title')
+    ->register(fn ($title) => strtoupper($title));
+
+$alias = $filter->getAlias();
+
+Filter::deregister($alias);
+```
