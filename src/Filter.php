@@ -32,7 +32,7 @@ class Filter
         return $this;
     }
 
-    public function register(callable $callback): self
+    public function register(callable|string|array $callback): self
     {
         add_filter($this->actionName, $callback, $this->priority, $this->args);
 
