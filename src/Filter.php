@@ -13,7 +13,7 @@ class Filter
         //
     }
 
-    public static function on(string $actionName): self
+    public static function hook(string $actionName): self
     {
         return new self($actionName);
     }
@@ -32,7 +32,7 @@ class Filter
         return $this;
     }
 
-    public function do(callable $callback): self
+    public function register(callable $callback): self
     {
         add_filter($this->actionName, $callback, $this->priority, $this->args);
 
