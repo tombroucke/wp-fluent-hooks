@@ -12,9 +12,6 @@ class Filter
 
     protected ?string $key = null;
 
-    /** @var array<string, static> */
-    protected static array $instances = [];
-
     protected function __construct(protected string $hookName)
     {
         //
@@ -49,22 +46,13 @@ class Filter
     public function register(callable|string|array $callback): static
     {
         $this->key = FilterRepository::getInstance()->add($this->hookName, $callback, $this->priority, $this->args, $this->alias);
-        static::$instances[$this->key] = $this;
 
         return $this;
     }
 
-    public function deregister(): bool
+    public static function deregister(string $alias): bool
     {
-        $result = FilterRepository::getInstance()->remove($this->key);
-        unset(static::$instances[$this->key]);
-
-        return $result;
-    }
-
-    public static function find(string $key): ?static
-    {
-        return static::$instances[$key] ?? null;
+        return FilterRepository::getInstance()->remove($alias);
     }
 
     public function getHookName(): string

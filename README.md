@@ -2,21 +2,27 @@
 
 ### Filters
 
+Basic usage:
+
 ```php
 Filter::hook('the_title')
     ->register(fn ($title) => strtoupper($title));
 ```
 
+With priority and argument count:
+
 ```php
 Filter::hook('save_post')
-    ->args(3)
-    ->priority(11)
+    ->args(3) // Default 1
+    ->priority(11) // Default 10
     ->register(function ($postId, $post, $update) {
         // Do something
     });
 ```
 
 ### Actions
+
+`Action` and `Filter` share the same API and can be used interchangeably.
 
 ```php
 Action::hook('init')
@@ -27,7 +33,7 @@ Action::hook('init')
 
 ### Aliases
 
-Assign an alias to reference the filter later:
+Assign an alias to reference the hook later:
 
 ```php
 Action::hook('body_class')
@@ -37,18 +43,8 @@ Action::hook('body_class')
 
 ### Deregistering
 
-By instance:
+Remove a registered hook by its alias:
 
 ```php
-$action = Action::hook('body_class')
-    ->alias('my_custom_body_class')
-    ->register(fn ($classes) => array_merge($classes, ['custom-class']));
-
-$action->deregister();
-```
-
-By finding the instance:
-
-```php
-Action::find('my_custom_body_class')?->deregister();
+Action::deregister('my_custom_body_class');
 ```
