@@ -2,7 +2,7 @@
 
 namespace Otomaties\WpFluentHooks;
 
-class FilterRepository
+final class FilterRepository
 {
     protected static ?self $instance = null;
 
@@ -18,12 +18,21 @@ class FilterRepository
         return static::$instance;
     }
 
-    public function add(string $hookName, callable|string|array $callback, int $priority, int $args, ?string $alias): string
+    /**
+    * @param callable|string|array{class: string, method: string} $callback
+    */
+    public function add(string $hookName, callable|string|array $callback, int $priority, int $args, ?string $alias): ?string
     {
-        add_filter($hookName, $callback, $priority, $args);
+        /** @var callable $callable */
+        $callable = $callback;
+        add_filter($hookName, $callable, $priority, $args);
 
         $idx = _wp_filter_build_unique_id($hookName, $callback, $priority);
         $key = $alias ?? $idx;
+
+        if (!$key || !$idx) {
+            return null;
+        }
 
         if ($alias !== null && isset($this->filters[$alias])) {
             throw new \InvalidArgumentException("Alias '{$alias}' is already in use.");

@@ -10,7 +10,7 @@ class Filter
 
     protected ?string $alias = null;
 
-    protected function __construct(protected string $hookName)
+    final protected function __construct(protected string $hookName)
     {
         //
     }
@@ -41,6 +41,9 @@ class Filter
         return $this;
     }
 
+    /**
+     * @param callable|string|array{class: string, method: string} $callback
+     */
     public function register(callable|string|array $callback): static
     {
         $this->alias = FilterRepository::getInstance()->add($this->hookName, $callback, $this->priority, $this->args, $this->alias);
