@@ -8,17 +8,27 @@
   "require-dev": {
     "laravel/pint": "^1.29",
     "phpstan/phpstan": "^2.1",
-    "szepeviktor/phpstan-wordpress": "^2.0"
+    "szepeviktor/phpstan-wordpress": "^2.0",
+    "pestphp/pest": "^4.6",
+    "brain/monkey": "^2.7"
   },
   "autoload": {
     "psr-4": {
       "Otomaties\\WpFluentHooks\\": "src/"
     }
   },
+  "scripts": {
+    "test": "pest"
+  },
   "authors": [
     {
       "name": "Tom Broucke",
       "email": "tom@tombroucke.be"
     }
-  ]
+  ],
+  "config": {
+    "allow-plugins": {
+      "pestphp/pest-plugin": true
+    }
+  }
 }
