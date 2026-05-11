@@ -11,16 +11,16 @@ final class FilterRepository
 
     public static function getInstance(): static
     {
-        if (static::$instance === null) {
-            static::$instance = new static;
+        if (self::$instance === null) {
+            self::$instance = new self;
         }
 
-        return static::$instance;
+        return self::$instance;
     }
 
     /**
-    * @param callable|string|array{class: string, method: string} $callback
-    */
+     * @param  callable|string|array{class: string, method: string}  $callback
+     */
     public function add(string $hookName, callable|string|array $callback, int $priority, int $args, ?string $alias): ?string
     {
         /** @var callable $callable */
@@ -30,7 +30,7 @@ final class FilterRepository
         $idx = _wp_filter_build_unique_id($hookName, $callback, $priority);
         $key = $alias ?? $idx;
 
-        if (!$key || !$idx) {
+        if (! $key || ! $idx) {
             return null;
         }
 
@@ -60,6 +60,12 @@ final class FilterRepository
         unset($this->filters[$alias]);
 
         return true;
+    }
+
+    /** @return array{hookName: string, priority: int, idx: string}|null */
+    public function get(string $alias): ?array
+    {
+        return $this->filters[$alias] ?? null;
     }
 
     /** @return array<string, array{hookName: string, priority: int, idx: string}> */

@@ -51,5 +51,5 @@ it('deregisters an action by alias', function () {
 
     Action::hook('init')->alias('my_init')->register(fn () => null);
 
-    expect(Action::deregister('my_init'))->toBeTrue();
+    expect(Action::findByAlias('my_init')->deregister())->toBeTrue();
 });

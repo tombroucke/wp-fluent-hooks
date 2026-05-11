@@ -86,21 +86,44 @@ it('uses auto-generated key as alias when no alias set', function () {
     expect($filter->getAlias())->toBe('auto_idx_123');
 });
 
-it('deregisters a filter by alias', function () {
+it('finds a registered alias and returns a Filter instance', function () {
     Brain\Monkey\Functions\expect('add_filter')->once();
     Brain\Monkey\Functions\expect('_wp_filter_build_unique_id')->once()->andReturn('idx');
 
-    Filter::hook('the_content')->alias('removable')->register(fn () => null);
+    Filter::hook('the_content')->priority(5)->alias('removable')->register(fn () => null);
 
-    $result = Filter::deregister('removable');
+    $filter = Filter::findByAlias('removable');
+
+    expect($filter)->toBeInstanceOf(Filter::class)
+        ->and($filter->getHookName())->toBe('the_content')
+        ->and($filter->getPriority())->toBe(5)
+        ->and($filter->getAlias())->toBe('removable');
+});
+
+it('throws when finding an unknown alias', function () {
+    Filter::findByAlias('does_not_exist');
+})->throws(\InvalidArgumentException::class, "Alias 'does_not_exist' not found in FilterRepository.");
+
+it('deregisters a repository-tracked filter via findByAlias', function () {
+    Brain\Monkey\Functions\expect('add_filter')->once();
+    Brain\Monkey\Functions\expect('_wp_filter_build_unique_id')->once()->andReturn('idx');
+
+    Filter::hook('the_content')->alias('removable2')->register(fn () => null);
+
+    $result = Filter::findByAlias('removable2')->deregister();
 
     expect($result)->toBeTrue();
 });
 
-it('returns false when deregistering unknown alias', function () {
-    $result = Filter::deregister('does_not_exist');
+it('deregisters an arbitrary WP filter by callback', function () {
+    Brain\Monkey\Functions\expect('remove_filter')
+        ->once()
+        ->with('woocommerce_single_product_summary', 'woocommerce_template_single_price', 10)
+        ->andReturn(true);
 
-    expect($result)->toBeFalse();
+    $result = Filter::hook('woocommerce_single_product_summary')->deregister('woocommerce_template_single_price');
+
+    expect($result)->toBeTrue();
 });
 
 it('supports chaining priority, args, alias, and register', function () {

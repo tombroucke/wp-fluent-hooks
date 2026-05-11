@@ -41,21 +41,59 @@ Action::hook('body_class')
     ->register(fn ($classes) => array_merge($classes, ['custom-class']));
 ```
 
-### Deregistering
+### HasHooks trait
 
-Remove a registered hook by its alias:
+Use the `HasHooks` trait in your own classes to register string method names as hook callbacks:
 
 ```php
-Action::deregister('my_custom_body_class');
+use Otomaties\WpFluentHooks\HasHooks;
+
+class WooCommerce
+{
+    use HasHooks;
+
+    public function woocommerce_template_single_price(): void
+    {
+        // Custom price output
+    }
+}
 ```
 
-If you didn't define an alias, retrieve the auto-generated one from the registered instance:
+Then from a service provider or bootstrap file:
+
+```php
+// Remove the default WooCommerce hook
+Filter::hook('woocommerce_single_product_summary')
+    ->priority(10) // 10 is default, so in this case this is actually not needed
+    ->deregister('woocommerce_template_single_price');
+
+// Register your custom class method at a different priority
+WooCommerce::hook('woocommerce_single_product_summary')
+    ->priority(25)
+    ->register('woocommerce_template_single_price');
+```
+
+### Deregistering
+
+Remove a hook that was registered through this library using its alias:
+
+```php
+Action::findByAlias('my_custom_body_class')->deregister();
+```
+
+If you didn't define an alias, use the auto-generated one from the registered instance:
 
 ```php
 $filter = Filter::hook('the_title')
     ->register(fn ($title) => strtoupper($title));
 
-$alias = $filter->getAlias();
+Filter::findByAlias($filter->getAlias())->deregister();
+```
 
-Filter::deregister($alias);
+Remove a hook that was **not** registered through this library by passing the callback directly:
+
+```php
+Filter::hook('woocommerce_single_product_summary')
+    ->priority(10)
+    ->deregister('woocommerce_template_single_price');
 ```
