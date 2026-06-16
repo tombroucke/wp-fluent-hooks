@@ -63,10 +63,10 @@ Filter::hook('the_title')->deregister($filter->getAlias());
 To deregister a hook added externally via `add_filter()` or `add_action()`, pass the callback name and match the priority:
 
 ```php
-Action::hook('woocommerce_after_shop_loop')
-    ->priority(10)
-    ->deregister('woocommerce_pagination')
+Action::hook('woocommerce_before_main_content')
+    ->priority(20)
+    ->deregister('woocommerce_breadcrumb')
     ->register(function () {
-        echo view('partials.pagination');
+        yoast_breadcrumb('<p class="small breadcrumb">', '</p>');
     });
 ```
