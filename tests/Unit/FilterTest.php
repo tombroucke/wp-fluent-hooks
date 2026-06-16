@@ -192,3 +192,60 @@ it('registers an array callback', function () {
 
     expect($filter)->toBeInstanceOf(Filter::class);
 });
+
+it('sets at hook and priority via fluent interface', function () {
+    $filter = Filter::hook('the_content')->at('wp_head', 5);
+
+    expect($filter->getAtHook())->toBe('wp_head')
+        ->and($filter->getAtPriority())->toBe(5);
+});
+
+it('defaults at priority to 10', function () {
+    $filter = Filter::hook('the_content')->at('wp_head');
+
+    expect($filter->getAtPriority())->toBe(10);
+});
+
+it('defers register to another hook via at()', function () {
+    Brain\Monkey\Functions\expect('add_action')
+        ->once()
+        ->with('wp_head', Mockery::type('callable'), 10);
+
+    $filter = Filter::hook('the_content')->at('wp_head')->register(fn ($content) => $content);
+
+    expect($filter)->toBeInstanceOf(Filter::class);
+});
+
+it('defers register to another hook with custom at priority', function () {
+    Brain\Monkey\Functions\expect('add_action')
+        ->once()
+        ->with('wp_head', Mockery::type('callable'), 5);
+
+    $filter = Filter::hook('the_content')->at('wp_head', 5)->register(fn ($content) => $content);
+
+    expect($filter)->toBeInstanceOf(Filter::class);
+});
+
+it('defers deregister to another hook via at()', function () {
+    Brain\Monkey\Functions\expect('add_action')
+        ->once()
+        ->with('wp_head', Mockery::type('callable'), 10);
+
+    $filter = Filter::hook('the_content')->at('wp_head')->deregister('some_function');
+
+    expect($filter)->toBeInstanceOf(Filter::class);
+});
+
+it('defers deregister to another hook with custom at priority', function () {
+    Brain\Monkey\Functions\expect('add_action')
+        ->once()
+        ->with('wp_head', Mockery::type('callable'), 20);
+
+    $filter = Filter::hook('the_content')->at('wp_head', 20)->deregister('some_function');
+
+    expect($filter)->toBeInstanceOf(Filter::class);
+});
+
+it('throws when combining when() with deregister()', function () {
+    Filter::hook('the_content')->when(fn () => true)->deregister('some_function');
+})->throws(\LogicException::class, 'when() cannot be used with deregister()');

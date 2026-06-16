@@ -10,6 +10,10 @@ class Filter
 
     protected ?string $alias = null;
 
+    protected ?string $atHook = null;
+
+    protected int $atPriority = 10;
+
     /** @var callable|null */
     protected $when = null;
 
@@ -40,6 +44,14 @@ class Filter
     public function alias(string $alias): static
     {
         $this->alias = $alias;
+
+        return $this;
+    }
+
+    public function at(string $hookName, int $priority = 10): static
+    {
+        $this->atHook = $hookName;
+        $this->atPriority = $priority;
 
         return $this;
     }
@@ -81,6 +93,14 @@ class Filter
             $callable = $callback;
         }
 
+        if ($this->atHook !== null) {
+            add_action($this->atHook, function () use ($callable, $priority, $args) {
+                FilterRepository::getInstance()->add($this->hookName, $callable, $priority, $args, $this->alias);
+            }, $this->atPriority);
+
+            return $this;
+        }
+
         FilterRepository::getInstance()->add($this->hookName, $callable, $priority, $args, $this->alias);
 
         return $this;
@@ -89,25 +109,31 @@ class Filter
     public function deregister(string $callback, ?int $priority = null): static
     {
         if ($this->when !== null) {
-            $reflection = new \ReflectionFunction(\Closure::fromCallable($this->when));
-            if ($reflection->getNumberOfParameters() > 0) {
-                throw new \InvalidArgumentException('The condition passed to when() may not have parameters when used with deregister().');
-            }
-
-            if (!($this->when)()) {
-                return $this;
-            }
+            throw new \LogicException('when() cannot be used with deregister(). Use at() to defer deregistration to a hook where the condition can be evaluated.');
         }
 
         $priority = $priority ?? $this->priority;
 
+        if ($this->atHook !== null) {
+            add_action($this->atHook, function () use ($callback, $priority) {
+                $this->performDeregister($callback, $priority);
+            }, $this->atPriority);
+
+            return $this;
+        }
+
+        $this->performDeregister($callback, $priority);
+
+        return $this;
+    }
+
+    protected function performDeregister(string $callback, int $priority): void
+    {
         if (FilterRepository::getInstance()->find($this->hookName, $callback, $priority)) {
             FilterRepository::getInstance()->remove($this->hookName, $callback, $priority);
         } else {
             remove_filter($this->hookName, $callback, $priority);
         }
-
-        return $this;
     }
 
     public function getHookName(): string
@@ -128,5 +154,15 @@ class Filter
     public function getAlias(): ?string
     {
         return $this->alias;
+    }
+
+    public function getAtHook(): ?string
+    {
+        return $this->atHook;
+    }
+
+    public function getAtPriority(): int
+    {
+        return $this->atPriority;
     }
 }

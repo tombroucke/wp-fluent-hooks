@@ -65,9 +65,7 @@ Action::hook('woocommerce_before_main_content')
 
 ### Conditional registration
 
-Use `when()` to conditionally run a registered callback or skip a deregister call. The condition is a callable that returns a boolean.
-
-For `register()`, the condition receives the same arguments as the filter/action and is evaluated at runtime:
+Use `when()` to conditionally run a registered callback. The condition receives the same arguments as the filter/action and is evaluated at the time the hook fires
 
 ```php
 Filter::hook('the_title')
@@ -75,22 +73,36 @@ Filter::hook('the_title')
     ->register(fn ($title) => strtoupper($title));
 ```
 
-For `deregister()`, the condition must be a zero-argument callable and is evaluated immediately:
+Use `always()` to remove a previously set condition:
 
 ```php
-Action::hook('init')
-    ->when(fn () => is_admin())
-    ->deregister('some_callback');
+Filter::hook('the_title')
+    ->when(fn ($title) => strlen($title) > 10)
+    ->register(fn ($title) => strtoupper($title))
+    ->always()
+    ->register(fn ($title) => strtolower($title));
 ```
 
-Use `always()` to remove a previously set condition and run unconditionally again, or chain `when()` again to override it with a different condition:
+> `when()` currently cannot be combined with `deregister()`. You will need to find a workaround for now.
+
+### Deferring to another hook
+
+Use `at()` to defer `register()` or `deregister()` until another hook fires. This is useful when the context you need (e.g. the current post, the current page) is not yet available at the time your code runs.
+
+When a plugin or theme nests the actions and filters
 
 ```php
-Action::hook('init')
-    ->when(fn () => is_admin())
-    ->deregister('admin_only_callback')
-    ->always()
-    ->deregister('another_callback');
+add_action('template_redirect', function () {
+    add_filter('the_title', 'strtoupper');
+}, 100);
+```
+
+You can
+
+```php
+Filter::hook('the_title')
+    ->at('template_redirect', 101)
+    ->deregister('strtoupper');
 ```
 
 ### Aliases
