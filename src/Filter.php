@@ -10,6 +10,9 @@ class Filter
 
     protected ?string $alias = null;
 
+    /** @var callable|null */
+    protected $when = null;
+
     final protected function __construct(protected string $hookName)
     {
         //
@@ -41,6 +44,20 @@ class Filter
         return $this;
     }
 
+    public function when(callable $condition): static
+    {
+        $this->when = $condition;
+
+        return $this;
+    }
+
+    public function always(): static
+    {
+        $this->when = null;
+
+        return $this;
+    }
+
     /**
      * @param  callable|string|array{class: string, method: string}  $callback
      */
@@ -49,13 +66,39 @@ class Filter
         $priority = $priority ?? $this->priority;
         $args = $args ?? $this->args;
 
-        FilterRepository::getInstance()->add($this->hookName, $callback, $priority, $args, $this->alias);
+        if ($this->when !== null) {
+            $condition = $this->when;
+            $callable = function () use ($condition, $callback) {
+                $filterArgs = func_get_args();
+
+                if (!$condition(...$filterArgs)) {
+                    return $filterArgs[0];
+                }
+
+                return $callback(...$filterArgs);
+            };
+        } else {
+            $callable = $callback;
+        }
+
+        FilterRepository::getInstance()->add($this->hookName, $callable, $priority, $args, $this->alias);
 
         return $this;
     }
 
     public function deregister(string $callback, ?int $priority = null): static
     {
+        if ($this->when !== null) {
+            $reflection = new \ReflectionFunction(\Closure::fromCallable($this->when));
+            if ($reflection->getNumberOfParameters() > 0) {
+                throw new \InvalidArgumentException('The condition passed to when() may not have parameters when used with deregister().');
+            }
+
+            if (!($this->when)()) {
+                return $this;
+            }
+        }
+
         $priority = $priority ?? $this->priority;
 
         if (FilterRepository::getInstance()->find($this->hookName, $callback, $priority)) {

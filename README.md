@@ -63,6 +63,36 @@ Action::hook('woocommerce_before_main_content')
     });
 ```
 
+### Conditional registration
+
+Use `when()` to conditionally run a registered callback or skip a deregister call. The condition is a callable that returns a boolean.
+
+For `register()`, the condition receives the same arguments as the filter/action and is evaluated at runtime:
+
+```php
+Filter::hook('the_title')
+    ->when(fn ($title) => strlen($title) > 10)
+    ->register(fn ($title) => strtoupper($title));
+```
+
+For `deregister()`, the condition must be a zero-argument callable and is evaluated immediately:
+
+```php
+Action::hook('init')
+    ->when(fn () => is_admin())
+    ->deregister('some_callback');
+```
+
+Use `always()` to remove a previously set condition and run unconditionally again, or chain `when()` again to override it with a different condition:
+
+```php
+Action::hook('init')
+    ->when(fn () => is_admin())
+    ->deregister('admin_only_callback')
+    ->always()
+    ->deregister('another_callback');
+```
+
 ### Aliases
 
 Only hooks registered with an alias are tracked internally. Without an alias, the hook is registered with WordPress but cannot be deregistered via this library. Assign an alias to reference a hook registered via this library:
