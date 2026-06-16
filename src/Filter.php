@@ -44,19 +44,24 @@ class Filter
     /**
      * @param  callable|string|array{class: string, method: string}  $callback
      */
-    public function register(callable|string|array $callback): static
+    public function register(callable|string|array $callback, ?int $priority = null, ?int $args = null): static
     {
-        $this->alias = FilterRepository::getInstance()->add($this->hookName, $callback, $this->priority, $this->args, $this->alias);
+        $priority = $priority ?? $this->priority;
+        $args = $args ?? $this->args;
+
+        $this->alias = FilterRepository::getInstance()->add($this->hookName, $callback, $priority, $args, $this->alias);
 
         return $this;
     }
 
-    public function deregister(string $callback): static
+    public function deregister(string $callback, ?int $priority = null): static
     {
-        if (FilterRepository::getInstance()->find($this->hookName, $callback, $this->priority)) {
-            FilterRepository::getInstance()->remove($this->hookName, $callback, $this->priority);
+        $priority = $priority ?? $this->priority;
+
+        if (FilterRepository::getInstance()->find($this->hookName, $callback, $priority)) {
+            FilterRepository::getInstance()->remove($this->hookName, $callback, $priority);
         } else {
-            remove_filter($this->hookName, $callback, $this->priority);
+            remove_filter($this->hookName, $callback, $priority);
         }
 
         return $this;

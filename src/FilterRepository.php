@@ -45,6 +45,7 @@ final class FilterRepository
         return $alias;
     }
 
+    /** @return array{hookName: string, priority: int, idx: string}|null */
     public function find(string $hookName, string $alias, int $priority): ?array
     {
         $key = $this->buildKey($hookName, $alias, $priority);

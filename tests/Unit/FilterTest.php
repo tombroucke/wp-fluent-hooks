@@ -111,7 +111,7 @@ it('falls back to remove_filter when alias not in repository', function () {
     expect($result)->toBeInstanceOf(Filter::class);
 });
 
-it('deregisters with custom priority', function () {
+it('deregisters with custom priority via builder', function () {
     Brain\Monkey\Functions\expect('remove_filter')
         ->once()
         ->with('the_content', 'some_function', 20)
@@ -120,6 +120,53 @@ it('deregisters with custom priority', function () {
     $result = Filter::hook('the_content')->priority(20)->deregister('some_function');
 
     expect($result)->toBeInstanceOf(Filter::class);
+});
+
+it('deregisters with inline priority argument', function () {
+    Brain\Monkey\Functions\expect('remove_filter')
+        ->once()
+        ->with('the_content', 'some_function', 20)
+        ->andReturn(true);
+
+    $result = Filter::hook('the_content')->deregister('some_function', 20);
+
+    expect($result)->toBeInstanceOf(Filter::class);
+});
+
+it('registers with inline priority argument', function () {
+    Brain\Monkey\Functions\expect('add_filter')
+        ->once()
+        ->with('the_content', Mockery::type('callable'), 20, 1);
+
+    Brain\Monkey\Functions\expect('_wp_filter_build_unique_id')->once()->andReturn('idx');
+
+    $filter = Filter::hook('the_content')->register(fn () => null, 20);
+
+    expect($filter)->toBeInstanceOf(Filter::class);
+});
+
+it('registers with inline args argument', function () {
+    Brain\Monkey\Functions\expect('add_filter')
+        ->once()
+        ->with('the_content', Mockery::type('callable'), 10, 3);
+
+    Brain\Monkey\Functions\expect('_wp_filter_build_unique_id')->once()->andReturn('idx');
+
+    $filter = Filter::hook('the_content')->register(fn () => null, null, 3);
+
+    expect($filter)->toBeInstanceOf(Filter::class);
+});
+
+it('registers with inline priority and args arguments', function () {
+    Brain\Monkey\Functions\expect('add_filter')
+        ->once()
+        ->with('the_content', Mockery::type('callable'), 20, 3);
+
+    Brain\Monkey\Functions\expect('_wp_filter_build_unique_id')->once()->andReturn('idx');
+
+    $filter = Filter::hook('the_content')->register(fn () => null, 20, 3);
+
+    expect($filter)->toBeInstanceOf(Filter::class);
 });
 
 it('supports chaining priority, args, alias, and register', function () {

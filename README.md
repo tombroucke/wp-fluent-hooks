@@ -1,8 +1,21 @@
+# WP Fluent Hooks
+
+A fluent interface for registering and deregistering WordPress filters and actions. Instead of repeating the hook name across multiple `add_filter()` and `remove_filter()` calls, you chain everything together. This makes your hook logic easier to read and maintain.
+
+```php
+// Before
+remove_filter('woocommerce_before_shop_loop', 'woocommerce_result_count', 20);
+remove_filter('woocommerce_before_shop_loop', 'woocommerce_catalog_ordering', 30);
+
+// After
+Action::hook('woocommerce_before_shop_loop')
+    ->deregister('woocommerce_result_count', 20)
+    ->deregister('woocommerce_catalog_ordering', 30);
+```
+
 ## Examples
 
 ### Filters
-
-Basic usage:
 
 ```php
 Filter::hook('the_title')
@@ -13,11 +26,9 @@ With priority and argument count:
 
 ```php
 Filter::hook('save_post')
-    ->args(3) // Default 1
-    ->priority(11) // Default 10
     ->register(function ($postId, $post, $update) {
         // Do something
-    });
+    }, priority: 11, args: 3);
 ```
 
 ### Actions
@@ -31,36 +42,17 @@ Action::hook('init')
     });
 ```
 
-### Aliases
-
-Assign an alias to reference the hook later:
-
-```php
-Action::hook('body_class')
-    ->alias('my_custom_body_class')
-    ->register(fn ($classes) => array_merge($classes, ['custom-class']));
-```
-
 ### Deregistering
 
-`deregister()` is fluent and can be chained. The hook name and priority must match the original registration.
-
-If the hook was registered via this library, it will be removed via the repository:
+Deregister external hooks by passing the callback name and priority inline:
 
 ```php
-// With an explicit alias
-Action::hook('body_class')
-    ->deregister('my_custom_body_class')
-    ->register(fn ($classes) => array_merge($classes, ['custom-class']));
-
-// Without an alias — use the auto-generated one
-$filter = Filter::hook('the_title')
-    ->register(fn ($title) => strtoupper($title));
-
-Filter::hook('the_title')->deregister($filter->getAlias());
+Action::hook('woocommerce_before_shop_loop')
+    ->deregister('woocommerce_result_count', 20)
+    ->deregister('woocommerce_catalog_ordering', 30);
 ```
 
-To deregister a hook added externally via `add_filter()` or `add_action()`, pass the callback name and match the priority:
+Chain deregistering and registering on the same hook. Use chainable methods `priority()` and `args()` to set values for the rest of the chain:
 
 ```php
 Action::hook('woocommerce_before_main_content')
@@ -69,4 +61,26 @@ Action::hook('woocommerce_before_main_content')
     ->register(function () {
         yoast_breadcrumb('<p class="small breadcrumb">', '</p>');
     });
+```
+
+### Aliases
+
+Assign an alias to reference a hook registered via this library:
+
+```php
+Action::hook('body_class')
+    ->alias('my_custom_body_class')
+    ->register(fn ($classes) => array_merge($classes, ['custom-class']));
+
+// Later:
+Action::hook('body_class')->deregister('my_custom_body_class');
+```
+
+Or use the auto-generated alias:
+
+```php
+$filter = Filter::hook('the_title')
+    ->register(fn ($title) => strtoupper($title));
+
+Filter::hook('the_title')->deregister($filter->getAlias());
 ```
