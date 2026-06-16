@@ -43,19 +43,30 @@ Action::hook('body_class')
 
 ### Deregistering
 
-Remove a registered hook by its alias:
+`deregister()` is fluent and can be chained. The hook name and priority must match the original registration.
+
+If the hook was registered via this library, it will be removed via the repository:
 
 ```php
-Action::deregister('my_custom_body_class');
-```
+// With an explicit alias
+Action::hook('body_class')
+    ->deregister('my_custom_body_class')
+    ->register(fn ($classes) => array_merge($classes, ['custom-class']));
 
-If you didn't define an alias, retrieve the auto-generated one from the registered instance:
-
-```php
+// Without an alias — use the auto-generated one
 $filter = Filter::hook('the_title')
     ->register(fn ($title) => strtoupper($title));
 
-$alias = $filter->getAlias();
+Filter::hook('the_title')->deregister($filter->getAlias());
+```
 
-Filter::deregister($alias);
+To deregister a hook added externally via `add_filter()` or `add_action()`, pass the callback name and match the priority:
+
+```php
+Action::hook('woocommerce_after_shop_loop')
+    ->priority(10)
+    ->deregister('woocommerce_pagination')
+    ->register(function () {
+        echo view('partials.pagination');
+    });
 ```

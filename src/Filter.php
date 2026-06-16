@@ -42,7 +42,7 @@ class Filter
     }
 
     /**
-     * @param callable|string|array{class: string, method: string} $callback
+     * @param  callable|string|array{class: string, method: string}  $callback
      */
     public function register(callable|string|array $callback): static
     {
@@ -51,9 +51,15 @@ class Filter
         return $this;
     }
 
-    public static function deregister(string $alias): bool
+    public function deregister(string $callback): static
     {
-        return FilterRepository::getInstance()->remove($alias);
+        if (FilterRepository::getInstance()->find($this->hookName, $callback, $this->priority)) {
+            FilterRepository::getInstance()->remove($this->hookName, $callback, $this->priority);
+        } else {
+            remove_filter($this->hookName, $callback, $this->priority);
+        }
+
+        return $this;
     }
 
     public function getHookName(): string

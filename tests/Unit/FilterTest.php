@@ -46,11 +46,14 @@ it('sets alias via fluent interface', function () {
 });
 
 it('returns self from fluent methods', function () {
+    Brain\Monkey\Functions\expect('remove_filter')->once()->andReturn(true);
+
     $filter = Filter::hook('the_content');
 
     expect($filter->priority(5))->toBe($filter)
         ->and($filter->args(2))->toBe($filter)
-        ->and($filter->alias('test'))->toBe($filter);
+        ->and($filter->alias('test'))->toBe($filter)
+        ->and($filter->deregister('some_function'))->toBe($filter);
 });
 
 it('registers a callable and returns self', function () {
@@ -86,21 +89,37 @@ it('uses auto-generated key as alias when no alias set', function () {
     expect($filter->getAlias())->toBe('auto_idx_123');
 });
 
-it('deregisters a filter by alias', function () {
+it('deregisters a callback that exists in the repository', function () {
     Brain\Monkey\Functions\expect('add_filter')->once();
     Brain\Monkey\Functions\expect('_wp_filter_build_unique_id')->once()->andReturn('idx');
 
     Filter::hook('the_content')->alias('removable')->register(fn () => null);
 
-    $result = Filter::deregister('removable');
+    $result = Filter::hook('the_content')->deregister('removable');
 
-    expect($result)->toBeTrue();
+    expect($result)->toBeInstanceOf(Filter::class);
 });
 
-it('returns false when deregistering unknown alias', function () {
-    $result = Filter::deregister('does_not_exist');
+it('falls back to remove_filter when alias not in repository', function () {
+    Brain\Monkey\Functions\expect('remove_filter')
+        ->once()
+        ->with('the_content', 'some_function', 10)
+        ->andReturn(true);
 
-    expect($result)->toBeFalse();
+    $result = Filter::hook('the_content')->deregister('some_function');
+
+    expect($result)->toBeInstanceOf(Filter::class);
+});
+
+it('deregisters with custom priority', function () {
+    Brain\Monkey\Functions\expect('remove_filter')
+        ->once()
+        ->with('the_content', 'some_function', 20)
+        ->andReturn(true);
+
+    $result = Filter::hook('the_content')->priority(20)->deregister('some_function');
+
+    expect($result)->toBeInstanceOf(Filter::class);
 });
 
 it('supports chaining priority, args, alias, and register', function () {

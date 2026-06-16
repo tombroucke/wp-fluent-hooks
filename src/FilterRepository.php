@@ -28,36 +28,47 @@ final class FilterRepository
         add_filter($hookName, $callable, $priority, $args);
 
         $idx = _wp_filter_build_unique_id($hookName, $callback, $priority);
-        $key = $alias ?? $idx;
+        $alias = $alias ?? $idx;
 
-        if (!$key || !$idx) {
+        if (!$alias || !$idx) {
             return null;
         }
 
-        if ($alias !== null && isset($this->filters[$alias])) {
+        $key = $this->buildKey($hookName, $alias, $priority);
+
+        if (isset($this->filters[$key])) {
             throw new \InvalidArgumentException("Alias '{$alias}' is already in use.");
         }
 
         $this->filters[$key] = compact('hookName', 'priority', 'idx');
 
-        return $key;
+        return $alias;
     }
 
-    public function remove(string $alias): bool
+    public function find(string $hookName, string $alias, int $priority): ?array
+    {
+        $key = $this->buildKey($hookName, $alias, $priority);
+
+        return $this->filters[$key] ?? null;
+    }
+
+    public function remove(string $hookName, string $alias, int $priority): bool
     {
         global $wp_filter;
 
-        if (! isset($this->filters[$alias])) {
+        $key = $this->buildKey($hookName, $alias, $priority);
+
+        if (! isset($this->filters[$key])) {
             return false;
         }
 
-        ['hookName' => $hookName, 'priority' => $priority, 'idx' => $idx] = $this->filters[$alias];
+        ['priority' => $priority, 'idx' => $idx] = $this->filters[$key];
 
         if (isset($wp_filter[$hookName]->callbacks[$priority][$idx])) {
             unset($wp_filter[$hookName]->callbacks[$priority][$idx]);
         }
 
-        unset($this->filters[$alias]);
+        unset($this->filters[$key]);
 
         return true;
     }
@@ -66,5 +77,10 @@ final class FilterRepository
     public function all(): array
     {
         return $this->filters;
+    }
+
+    private function buildKey(string $hookName, string $alias, int $priority): string
+    {
+        return "{$hookName}_{$alias}_{$priority}";
     }
 }

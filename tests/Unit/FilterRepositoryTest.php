@@ -37,10 +37,10 @@ it('stores filter data after add', function () {
 
     $all = $repo->all();
 
-    expect($all)->toHaveKey('title_filter')
-        ->and($all['title_filter']['hookName'])->toBe('the_title')
-        ->and($all['title_filter']['priority'])->toBe(5)
-        ->and($all['title_filter']['idx'])->toBe('idx');
+    expect($all)->toHaveKey('the_title_title_filter_5')
+        ->and($all['the_title_title_filter_5']['hookName'])->toBe('the_title')
+        ->and($all['the_title_title_filter_5']['priority'])->toBe(5)
+        ->and($all['the_title_title_filter_5']['idx'])->toBe('idx');
 });
 
 it('uses auto-generated idx as key when no alias provided', function () {
@@ -51,7 +51,7 @@ it('uses auto-generated idx as key when no alias provided', function () {
     $key = $repo->add('the_content', fn () => null, 10, 1, null);
 
     expect($key)->toBe('auto_idx')
-        ->and($repo->all())->toHaveKey('auto_idx');
+        ->and($repo->all())->toHaveKey('the_content_auto_idx_10');
 });
 
 it('throws InvalidArgumentException when alias is already in use', function () {
@@ -61,24 +61,36 @@ it('throws InvalidArgumentException when alias is already in use', function () {
     $repo = FilterRepository::getInstance();
     $repo->add('the_content', fn () => null, 10, 1, 'duplicate_alias');
 
-    $repo->add('the_title', fn () => null, 10, 1, 'duplicate_alias');
+    $repo->add('the_content', fn () => null, 10, 1, 'duplicate_alias');
 })->throws(InvalidArgumentException::class, "Alias 'duplicate_alias' is already in use.");
 
-it('removes a filter by alias', function () {
+it('finds a filter by hook name, alias and priority', function () {
+    Brain\Monkey\Functions\expect('add_filter')->once();
+    Brain\Monkey\Functions\expect('_wp_filter_build_unique_id')->once()->andReturn('idx');
+
+    $repo = FilterRepository::getInstance();
+    $repo->add('the_content', fn () => null, 10, 1, 'my_alias');
+
+    expect($repo->find('the_content', 'my_alias', 10))->toBeArray()
+        ->and($repo->find('the_content', 'my_alias', 99))->toBeNull()
+        ->and($repo->find('other_hook', 'my_alias', 10))->toBeNull();
+});
+
+it('removes a filter by hook name, alias and priority', function () {
     Brain\Monkey\Functions\expect('add_filter')->once();
     Brain\Monkey\Functions\expect('_wp_filter_build_unique_id')->once()->andReturn('idx');
 
     $repo = FilterRepository::getInstance();
     $repo->add('the_content', fn () => null, 10, 1, 'removable');
 
-    $result = $repo->remove('removable');
+    $result = $repo->remove('the_content', 'removable', 10);
 
     expect($result)->toBeTrue()
-        ->and($repo->all())->not->toHaveKey('removable');
+        ->and($repo->all())->not->toHaveKey('the_content_removable_10');
 });
 
 it('returns false when removing non-existent alias', function () {
-    $result = FilterRepository::getInstance()->remove('ghost');
+    $result = FilterRepository::getInstance()->remove('the_content', 'ghost', 10);
 
     expect($result)->toBeFalse();
 });
@@ -89,14 +101,13 @@ it('removes the callback from wp_filter global', function () {
     Brain\Monkey\Functions\expect('add_filter')->once();
     Brain\Monkey\Functions\expect('_wp_filter_build_unique_id')->once()->andReturn('my_idx');
 
-    // Simulate wp_filter holding the callback
     $wpFilterEntry = new stdClass();
     $wpFilterEntry->callbacks = [10 => ['my_idx' => ['function' => fn () => null]]];
     $wp_filter['the_content'] = $wpFilterEntry;
 
     $repo = FilterRepository::getInstance();
     $repo->add('the_content', fn () => null, 10, 1, 'removable');
-    $repo->remove('removable');
+    $repo->remove('the_content', 'removable', 10);
 
     expect(isset($wp_filter['the_content']->callbacks[10]['my_idx']))->toBeFalse();
 });
@@ -111,5 +122,5 @@ it('tracks multiple filters', function () {
     $repo->add('hook_c', fn () => null, 10, 1, 'alias_c');
 
     expect($repo->all())->toHaveCount(3)
-        ->toHaveKeys(['alias_a', 'alias_b', 'alias_c']);
+        ->toHaveKeys(['hook_a_alias_a_10', 'hook_b_alias_b_10', 'hook_c_alias_c_10']);
 });

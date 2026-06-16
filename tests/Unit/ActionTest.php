@@ -45,11 +45,20 @@ it('supports all fluent methods from Filter', function () {
         ->and($action->getAlias())->toBe('my_action');
 });
 
-it('deregisters an action by alias', function () {
+it('deregisters an action that exists in the repository', function () {
     Brain\Monkey\Functions\expect('add_filter')->once();
     Brain\Monkey\Functions\expect('_wp_filter_build_unique_id')->once()->andReturn('idx');
 
     Action::hook('init')->alias('my_init')->register(fn () => null);
 
-    expect(Action::deregister('my_init'))->toBeTrue();
+    expect(Action::hook('init')->deregister('my_init'))->toBeInstanceOf(Action::class);
+});
+
+it('falls back to remove_filter when action not in repository', function () {
+    Brain\Monkey\Functions\expect('remove_filter')
+        ->once()
+        ->with('init', 'some_function', 10)
+        ->andReturn(true);
+
+    expect(Action::hook('init')->deregister('some_function'))->toBeInstanceOf(Action::class);
 });
