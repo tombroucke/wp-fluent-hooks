@@ -65,7 +65,7 @@ Action::hook('woocommerce_before_main_content')
 
 ### Aliases
 
-Assign an alias to reference a hook registered via this library:
+Only hooks registered with an alias are tracked internally. Without an alias, the hook is registered with WordPress but cannot be deregistered via this library. Assign an alias to reference a hook registered via this library:
 
 ```php
 Action::hook('body_class')
@@ -73,14 +73,6 @@ Action::hook('body_class')
     ->register(fn ($classes) => array_merge($classes, ['custom-class']));
 
 // Later:
-Action::hook('body_class')->deregister('my_custom_body_class');
-```
-
-Or use the auto-generated alias:
-
-```php
-$filter = Filter::hook('the_title')
-    ->register(fn ($title) => strtoupper($title));
-
-Filter::hook('the_title')->deregister($filter->getAlias());
+Action::hook('body_class')
+    ->deregister('my_custom_body_class');
 ```

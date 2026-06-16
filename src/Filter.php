@@ -49,7 +49,7 @@ class Filter
         $priority = $priority ?? $this->priority;
         $args = $args ?? $this->args;
 
-        $this->alias = FilterRepository::getInstance()->add($this->hookName, $callback, $priority, $args, $this->alias);
+        FilterRepository::getInstance()->add($this->hookName, $callback, $priority, $args, $this->alias);
 
         return $this;
     }

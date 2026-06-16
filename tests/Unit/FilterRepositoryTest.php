@@ -13,7 +13,7 @@ it('starts with an empty filters list', function () {
     expect(FilterRepository::getInstance()->all())->toBe([]);
 });
 
-it('adds a filter and returns the alias', function () {
+it('adds a filter and stores it in the repository', function () {
     Brain\Monkey\Functions\expect('add_filter')
         ->once()
         ->with('the_content', Mockery::type('callable'), 10, 1);
@@ -23,9 +23,9 @@ it('adds a filter and returns the alias', function () {
         ->andReturn('the_content_idx');
 
     $repo = FilterRepository::getInstance();
-    $key = $repo->add('the_content', fn ($c) => $c, 10, 1, 'my_alias');
+    $repo->add('the_content', fn ($c) => $c, 10, 1, 'my_alias');
 
-    expect($key)->toBe('my_alias');
+    expect($repo->all())->toHaveKey('the_content_my_alias_10');
 });
 
 it('stores filter data after add', function () {
@@ -43,15 +43,13 @@ it('stores filter data after add', function () {
         ->and($all['the_title_title_filter_5']['idx'])->toBe('idx');
 });
 
-it('uses auto-generated idx as key when no alias provided', function () {
+it('does not store filter in repository when no alias provided', function () {
     Brain\Monkey\Functions\expect('add_filter')->once();
-    Brain\Monkey\Functions\expect('_wp_filter_build_unique_id')->once()->andReturn('auto_idx');
 
     $repo = FilterRepository::getInstance();
-    $key = $repo->add('the_content', fn () => null, 10, 1, null);
+    $repo->add('the_content', fn () => null, 10, 1, null);
 
-    expect($key)->toBe('auto_idx')
-        ->and($repo->all())->toHaveKey('the_content_auto_idx_10');
+    expect($repo->all())->toBe([]);
 });
 
 it('throws InvalidArgumentException when alias is already in use', function () {

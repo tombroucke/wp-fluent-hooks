@@ -61,10 +61,6 @@ it('registers a callable and returns self', function () {
         ->once()
         ->with('the_content', Mockery::type('callable'), 10, 1);
 
-    Brain\Monkey\Functions\expect('_wp_filter_build_unique_id')
-        ->once()
-        ->andReturn('abc123');
-
     $callback = fn ($content) => $content;
     $filter = Filter::hook('the_content')->register($callback);
 
@@ -80,13 +76,12 @@ it('stores the alias after registration', function () {
     expect($filter->getAlias())->toBe('my_filter');
 });
 
-it('uses auto-generated key as alias when no alias set', function () {
+it('has no alias after registration when none was set', function () {
     Brain\Monkey\Functions\expect('add_filter')->once();
-    Brain\Monkey\Functions\expect('_wp_filter_build_unique_id')->once()->andReturn('auto_idx_123');
 
     $filter = Filter::hook('the_content')->register(fn () => null);
 
-    expect($filter->getAlias())->toBe('auto_idx_123');
+    expect($filter->getAlias())->toBeNull();
 });
 
 it('deregisters a callback that exists in the repository', function () {
@@ -138,8 +133,6 @@ it('registers with inline priority argument', function () {
         ->once()
         ->with('the_content', Mockery::type('callable'), 20, 1);
 
-    Brain\Monkey\Functions\expect('_wp_filter_build_unique_id')->once()->andReturn('idx');
-
     $filter = Filter::hook('the_content')->register(fn () => null, 20);
 
     expect($filter)->toBeInstanceOf(Filter::class);
@@ -150,8 +143,6 @@ it('registers with inline args argument', function () {
         ->once()
         ->with('the_content', Mockery::type('callable'), 10, 3);
 
-    Brain\Monkey\Functions\expect('_wp_filter_build_unique_id')->once()->andReturn('idx');
-
     $filter = Filter::hook('the_content')->register(fn () => null, null, 3);
 
     expect($filter)->toBeInstanceOf(Filter::class);
@@ -161,8 +152,6 @@ it('registers with inline priority and args arguments', function () {
     Brain\Monkey\Functions\expect('add_filter')
         ->once()
         ->with('the_content', Mockery::type('callable'), 20, 3);
-
-    Brain\Monkey\Functions\expect('_wp_filter_build_unique_id')->once()->andReturn('idx');
 
     $filter = Filter::hook('the_content')->register(fn () => null, 20, 3);
 
@@ -190,7 +179,6 @@ it('supports chaining priority, args, alias, and register', function () {
 
 it('registers a string callback', function () {
     Brain\Monkey\Functions\expect('add_filter')->once();
-    Brain\Monkey\Functions\expect('_wp_filter_build_unique_id')->once()->andReturn('idx');
 
     $filter = Filter::hook('the_title')->register('strtoupper');
 
@@ -199,7 +187,6 @@ it('registers a string callback', function () {
 
 it('registers an array callback', function () {
     Brain\Monkey\Functions\expect('add_filter')->once();
-    Brain\Monkey\Functions\expect('_wp_filter_build_unique_id')->once()->andReturn('idx');
 
     $filter = Filter::hook('the_title')->register(['class' => 'MyClass', 'method' => 'handle']);
 

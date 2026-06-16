@@ -21,17 +21,20 @@ final class FilterRepository
     /**
     * @param callable|string|array{class: string, method: string} $callback
     */
-    public function add(string $hookName, callable|string|array $callback, int $priority, int $args, ?string $alias): ?string
+    public function add(string $hookName, callable|string|array $callback, int $priority, int $args, ?string $alias): void
     {
         /** @var callable $callable */
         $callable = $callback;
         add_filter($hookName, $callable, $priority, $args);
 
-        $idx = _wp_filter_build_unique_id($hookName, $callback, $priority);
-        $alias = $alias ?? $idx;
+        if (!$alias) {
+            return;
+        }
 
-        if (!$alias || !$idx) {
-            return null;
+        $idx = _wp_filter_build_unique_id($hookName, $callback, $priority);
+
+        if (!$idx) {
+            return;
         }
 
         $key = $this->buildKey($hookName, $alias, $priority);
@@ -41,8 +44,6 @@ final class FilterRepository
         }
 
         $this->filters[$key] = compact('hookName', 'priority', 'idx');
-
-        return $alias;
     }
 
     /** @return array{hookName: string, priority: int, idx: string}|null */

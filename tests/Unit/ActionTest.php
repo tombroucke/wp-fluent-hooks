@@ -21,8 +21,6 @@ it('registers an action callback', function () {
         ->once()
         ->with('init', Mockery::type('callable'), 10, 1);
 
-    Brain\Monkey\Functions\expect('_wp_filter_build_unique_id')->once()->andReturn('init_idx');
-
     $action = Action::hook('init')->register(fn () => null);
 
     expect($action)->toBeInstanceOf(Action::class);
