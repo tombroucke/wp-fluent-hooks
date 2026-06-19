@@ -1,8 +1,10 @@
 <?php
 
+use Otomaties\WpFluentHooks\FilterRepository;
+
 function resetFilterRepository(): void
 {
-    $reflection = new ReflectionClass(Otomaties\WpFluentHooks\FilterRepository::class);
+    $reflection = new ReflectionClass(FilterRepository::class);
     $instance = $reflection->getProperty('instance');
     $instance->setAccessible(true);
     $instance->setValue(null, null);

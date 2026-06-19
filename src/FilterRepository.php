@@ -11,29 +11,29 @@ final class FilterRepository
 
     public static function getInstance(): static
     {
-        if (static::$instance === null) {
-            static::$instance = new static;
+        if (self::$instance === null) {
+            self::$instance = new self;
         }
 
-        return static::$instance;
+        return self::$instance;
     }
 
     /**
-    * @param callable|string|array{class: string, method: string} $callback
-    */
+     * @param  callable|string|array{class: string, method: string}  $callback
+     */
     public function add(string $hookName, callable|string|array $callback, int $priority, int $args, ?string $alias): void
     {
         /** @var callable $callable */
         $callable = $callback;
         add_filter($hookName, $callable, $priority, $args);
 
-        if (!$alias) {
+        if (! $alias) {
             return;
         }
 
         $idx = _wp_filter_build_unique_id($hookName, $callback, $priority);
 
-        if (!$idx) {
+        if (! $idx) {
             return;
         }
 

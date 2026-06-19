@@ -248,4 +248,4 @@ it('defers deregister to another hook with custom at priority', function () {
 
 it('throws when combining when() with deregister()', function () {
     Filter::hook('the_content')->when(fn () => true)->deregister('some_function');
-})->throws(\LogicException::class, 'when() cannot be used with deregister()');
+})->throws(LogicException::class, 'when() cannot be used with deregister()');

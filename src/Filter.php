@@ -83,7 +83,7 @@ class Filter
             $callable = function () use ($condition, $callback) {
                 $filterArgs = func_get_args();
 
-                if (!$condition(...$filterArgs)) {
+                if (! $condition(...$filterArgs)) {
                     return $filterArgs[0];
                 }
 

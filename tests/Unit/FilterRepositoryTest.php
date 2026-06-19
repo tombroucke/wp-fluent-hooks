@@ -99,7 +99,7 @@ it('removes the callback from wp_filter global', function () {
     Brain\Monkey\Functions\expect('add_filter')->once();
     Brain\Monkey\Functions\expect('_wp_filter_build_unique_id')->once()->andReturn('my_idx');
 
-    $wpFilterEntry = new stdClass();
+    $wpFilterEntry = new stdClass;
     $wpFilterEntry->callbacks = [10 => ['my_idx' => ['function' => fn () => null]]];
     $wp_filter['the_content'] = $wpFilterEntry;
 
